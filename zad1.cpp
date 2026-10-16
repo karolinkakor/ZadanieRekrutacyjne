@@ -26,6 +26,11 @@ struct Point {
     string id;
 };
 
+void saveVisualizationData(const string& filename, 
+                           const vector<Cone>& original_cones, 
+                           const vector<MergedCone>& result_cones,
+                           const vector<Point>& hull);
+
 // orientacja skrętu
 double crossProduct(const Point& o, const Point& a, const Point& b) {
     return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
@@ -35,7 +40,8 @@ double distance(const Point& p1, const Point& p2) {
     return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
 }
 
-void findConvexHull(const vector<MergedCone>& result_cones) {
+//otoczka
+void findConvexHull(const vector<MergedCone>& result_cones, const vector<Cone>& original_cones) {
     if (result_cones.size() < 3) {
         return;
     }
@@ -85,6 +91,9 @@ void findConvexHull(const vector<MergedCone>& result_cones) {
         cout << p.id << " ";
     }
     cout << endl;
+
+    // zapisujemy dane do csv
+    saveVisualizationData("visualization_data.csv", original_cones, result_cones, hull);
 }
 
 vector<MergedCone> deduplicateCones(const vector<Cone>& cones, double d_min) {
@@ -141,12 +150,10 @@ vector<MergedCone> deduplicateCones(const vector<Cone>& cones, double d_min) {
         result_cones.push_back(mc);
     }
 
-    cout << "Liczba nowych pacholkow: " << result_cones.size() << "\n\n";
-
     for (const auto& mc : result_cones) {
         cout << mc.new_id 
             << ", (" << mc.x << ", " << mc.y << "), " 
-            << "utworzony z: ";
+            << "utworzony z ";
         
         for (const auto& old_id : mc.old_ids) {
             cout << old_id << " ";
@@ -155,6 +162,44 @@ vector<MergedCone> deduplicateCones(const vector<Cone>& cones, double d_min) {
     }
     
     return result_cones;
+}
+
+void saveVisualizationData(const string& filename, 
+                           const vector<Cone>& original_cones, 
+                           const vector<MergedCone>& result_cones,
+                           const vector<Point>& hull) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        return;
+    }
+
+    // pachołki na pocz
+    file << "ORIGINAL_CONES\n";
+    file << "id,x,y\n";
+    for (const auto& c : original_cones) {
+        file << c.id << "," << c.x << "," << c.y << "\n";
+    }
+
+    // nowe pachołki - scalone
+    file << "MERGED_CONES\n";
+    file << "new_id,x,y,old_ids\n";
+    for (const auto& mc : result_cones) {
+        file << mc.new_id << "," << mc.x << "," << mc.y << ",";
+        for (size_t i = 0; i < mc.old_ids.size(); ++i) {
+            file << mc.old_ids[i];
+            if (i + 1 < mc.old_ids.size()) file << ";";
+        }
+        file << "\n";
+    }
+
+    // pachołki do otoczki
+    file << "CONVEX_HULL\n";
+    file << "id,x,y\n";
+    for (const auto& p : hull) {
+        file << p.id << "," << p.x << "," << p.y << "\n";
+    }
+
+    file.close();
 }
 
 int main() {
@@ -177,7 +222,7 @@ int main() {
     vector<MergedCone> result_cones = deduplicateCones(cones, d_min);
     
     // otoczka
-    findConvexHull(result_cones);
+    findConvexHull(result_cones, cones);
 
     return 0;
 }
