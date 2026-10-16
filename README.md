@@ -10,3 +10,5 @@ Używamy algorytmu Andrew. Na początku porządkujemy punkty rosnąco po x, a je
 Następnie sprawdzamy orientację skrętu. Jeśli punkt skręca w prawo to wyrzucamy z otoczki wcześniejszy pachołek,
 ponieważ okazuje się, że tworzył „wklęśnięcie”. Ponownie sprawdzamy pachołek z jeszcze wcześniejszym.
 Na końcu sumujemy odległości między kolejnymi pachołkami, aby uzyskać obwód otoczki.
+
+W pliku visualization.py należy zmienić: (r'd:\Karusia\studia\visualization_data.csv') na prawdziwe miejsce zapisanych danych z pliku visualization_data.csv
